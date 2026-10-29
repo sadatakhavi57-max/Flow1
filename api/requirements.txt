@@ -1,0 +1,8 @@
+# Slice 01 HTTP/DB layer. Versions are NOT pinned yet: pin them in a lock file after the first green run (contract section 3).
+fastapi
+uvicorn
+httpx
+psycopg[binary]
+argon2-cffi
+cryptography
+PyJWT

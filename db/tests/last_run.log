@@ -1,0 +1,69 @@
+Mon Oct 12 19:59:18 UTC 2026
+PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+== A. empty database: 001,002,003, seeds 998+999 twice
+  ok   A1 counts after first run
+  ok   A2 second run changes nothing
+  ok   A3 org code DEMO
+  ok   A4 admin hash is argon2id
+  ok   A5 all 3 dev users verify with the dev password (argon2id recomputed)
+  ok   A6 dev users per role
+  ok   A7 spec value is valid option
+== B. legacy: 001,002, OLD 999 seeds, two real orgs, THEN 003, then 998/999 twice
+  ok   B0 old seed left placeholder hash
+  ok   B1 backfill
+  ok   B2 admin hash upgraded
+  ok   B3 no duplicate demo data (org count 3, demo counts)
+  ok   B4 rerun changes nothing
+  ok   B5 old customer/product kept (no duplicates)
+== C. admin password changed must survive (fresh and legacy)
+  ok   C1 survives re-seeding (fresh path)
+  ok   C2 survives 003 + 998 + 999 (legacy path)
+== D. same-name guard (4): real org named 'TradeFlow Demo', other national_id
+  ok   D0 real org was NOT given DEMO
+  ok   D1 998 aborts with the clear error
+  ok   D2 real org + attached rows unchanged
+  ok   D3 no sample data anywhere
+  ok   D4 seed step fails as a whole -> runner would stop, 999 never runs
+  ok   D5 still unchanged after the seed step
+== D'. (5) real same-name org AND a proper demo org
+  ok   D6 aborts (several share the name)
+  ok   D7 nothing changed
+== D''. demo org with a wrong code (reviewer control)
+  ok   D8 aborts, does not touch the immutable code
+  ok   D9 unchanged
+== E. 003 constraints
+  ok   E1 duplicate code -> 23505
+  ok   E2 'org-001' (lower-case) -> 23514
+  ok   E3 ' ORG-002' (space) -> 23514
+  ok   E4 one-char code -> 23514
+  ok   E5 leading dash -> 23514
+  ok   E6 51 chars -> 22001 or 23514
+  ok   E7 NULL code -> 23502
+  ok   E8 code update -> 55000
+  ok   E9 same-value code update allowed
+  ok   E10 other column update allowed
+  ok   E11 username 'Admin' -> 23514
+  ok   E12 username ' admin' -> 23514
+  ok   E13 username 'admin ' -> 23514
+  ok   E14 username 'admin' ok
+  ok   E15 code is VARCHAR(50), unique index present
+  ok   E16 trigger exists
+== F. 003 fails loudly and atomically
+  ok   F1 duplicate demo key -> clear failure
+  ok   F2 rolled back: no code column
+  ok   F3 unnormalized username -> fails
+  ok   F4 rolled back (no code column)
+  ok   F5 re-applying 003 by hand fails (only the runner's version check protects it)
+== G. 002 regression + concurrency still pass on top of 003 (fixtures now supply organizations.code)
+Passed 66 / Failed 0
+  ok   G1 regression_post003.sql: rc=0, Failed 0
+  ok   G2 concurrency: 500 unique numbers, 0 errors
+
+passed=48 failed=0
+ok   migrations are 001,002,003 in order
+ok   seeds are 998,999 in numeric order (998 first)
+ok   998 is a seed (not recorded as migration)
+ok   fresh DB: all three pending in order
+ok   001+002 applied: only 003 pending
+ok   003 applied without 002 -> 002 refused (no out-of-order): Out-of-order migration(s) would be applied below the newest 
+ok   edited 003 detected by checksum
