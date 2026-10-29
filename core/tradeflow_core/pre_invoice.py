@@ -171,12 +171,18 @@ class UnavailableRenderer:
 
 
 # ----------------------------------------------------------------------------------------------- inputs
-def parse_create(body) -> None:
-    """POST /purchase-requests/{id}/pre-invoices - body must be empty (no supersedes_id)."""
-    inputs.strict_object(body, ())
-    if body:
-        raise AppError(ErrorCode.VALIDATION_ERROR, details=[{"field": "body", "reason": "UNKNOWN_FIELDS"}])
-
+def parse_create(body) -> str | None:
+    """POST /purchase-requests/{id}/pre-invoices.
+    Accept an optional canonical lowercase UUID in supersedes_id.
+    """
+    inputs.strict_object(body, ("supersedes_id",))
+    value = body.get("supersedes_id")
+    if value is None:
+        return None
+    parsed = inputs.parse_uuid(value, "supersedes_id")
+    if parsed != value:
+        raise inputs.verr("supersedes_id", "NOT_A_UUID")
+    return parsed
 
 def parse_cancel(body) -> str | None:
     """The reason is optional here; the Service requires it for an ISSUED pre-invoice (DRAFT: optional)."""
