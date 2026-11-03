@@ -1,8 +1,28 @@
-# Slice 01 HTTP/DB layer. Versions are NOT pinned yet: pin them in a lock file after the first green run (contract section 3).
-fastapi
-uvicorn
-httpx
-psycopg[binary]
-argon2-cffi
-cryptography
-PyJWT
+# ==========================================
+# Flow1 API - Runtime dependencies
+# Versions from the reported successful environment
+# ==========================================
+
+# API framework
+fastapi==0.162.0
+starlette==1.10.0
+pydantic==2.14.2
+
+# Database
+psycopg[binary]==3.3.7
+
+# Authentication / JWT
+PyJWT==2.15.1
+
+# ==========================================
+# Deployment dependencies
+# ==========================================
+
+uvicorn==0.54.0
+
+# ==========================================
+# Test dependencies
+# ==========================================
+
+httpx==0.28.1
+pytest==9.2.0
