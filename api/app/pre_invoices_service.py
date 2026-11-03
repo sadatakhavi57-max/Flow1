@@ -248,6 +248,23 @@ class PreInvoiceService:
                 authorize(p.role_code, Cap.PREINVOICE_CANCEL_ISSUED)
                 if reason is None:
                     raise inputs.verr("reason", "REQUIRED")
+                # Lock order 3: check for an open replacement DRAFT.
+                replacement = conn.execute(
+                    """
+                    SELECT id
+                    FROM pre_invoices
+                    WHERE organization_id = %s
+                      AND supersedes_id = %s
+                      AND status = 'DRAFT'
+                    LIMIT 1
+                    """,
+                    (p.org_id, pid)
+                ).fetchone()
+                if replacement is not None:
+                    raise _conflict(
+                        "OPEN_REPLACEMENT_DRAFT",
+                        replacement_pre_invoice_id=str(replacement["id"])
+                    )
             pi.assert_transition(st, "CANCELLED")
             conn.execute("UPDATE pre_invoices SET status = 'CANCELLED', cancelled_by = %s, cancelled_at = NOW(), cancel_reason = %s"
                          " WHERE id = %s AND organization_id = %s", (p.user_id, reason, pid, p.org_id))
